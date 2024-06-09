@@ -13,6 +13,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+import java.util.Optional;
+
 
 @Configuration
 @Slf4j
@@ -24,11 +26,9 @@ public class ApplicationInitConfig {
     @Bean
     ApplicationRunner applicationRunner(UserRepository userRepository, RoleRepository roleRepository, UserRolesRepository userRolesRepository) {
         return args -> {
-            Role roleAdmin = roleRepository.findById("ADMIN").orElse(
-                    roleRepository.save(new Role()
-                            .setName("ADMIN")
-                            .setDescription("ADMIN"))
-            );
+            Role roleAdmin;
+            Optional<Role> roleAdminOptional = roleRepository.findById("ADMIN");
+            roleAdmin = roleAdminOptional.orElseGet(() -> roleRepository.save(new Role().setName("ADMIN").setDescription("ADMIN")));
             if (roleRepository.findById("USER").isEmpty())
                 roleRepository.save(new Role().setName("USER").setDescription("USER"));
             if (userRepository.findByUsername("admin").isEmpty()) {

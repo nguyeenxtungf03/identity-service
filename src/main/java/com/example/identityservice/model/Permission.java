@@ -1,14 +1,13 @@
 package com.example.identityservice.model;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.Accessors;
 import lombok.experimental.FieldDefaults;
 
-@Data
+import java.util.Set;
+
+@Getter @Setter
 @AllArgsConstructor
 @NoArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
@@ -20,4 +19,7 @@ public class Permission {
     String name;
 
     String description;
+
+    @ManyToMany(mappedBy = "permissions", fetch = FetchType.LAZY)
+    Set<Role> roles;
 }
