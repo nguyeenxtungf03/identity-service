@@ -1,5 +1,6 @@
 package com.example.identityservice.dto.request;
 
+import com.example.identityservice.validator.DobConstraint;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
@@ -31,5 +32,6 @@ public class UserRequest {
     String lastName;
 
     @JsonFormat(pattern = "dd-MM-yyyy")
+    @DobConstraint(min = 18)
     Date dob;
 }
