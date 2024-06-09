@@ -25,6 +25,6 @@ public class DobValidator implements ConstraintValidator<DobConstraint, Date> {
         LocalDate localDate = date.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
         LocalDate minDate = LocalDate.now().minusYears(min);
 
-        return localDate.isAfter(minDate);
+        return !localDate.isAfter(minDate);
     }
 }

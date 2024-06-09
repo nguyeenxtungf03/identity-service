@@ -2,32 +2,50 @@ package com.example.identityservice.exception;
 
 
 import com.example.identityservice.dto.response.ApiResponse;
+import jakarta.validation.ConstraintViolation;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
-import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 
+import java.util.Map;
 import java.util.Objects;
 
-
+@Slf4j
 @ControllerAdvice
 public class GlobalExceptionHandler {
 
+    private static final String MIN_ATTRIBUTE = "min";
+
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ApiResponse<Object>> methodArgumentNotValidExceptionHandler(MethodArgumentNotValidException e) {
+
+        String enumKey = Objects.requireNonNull(e.getBindingResult().getFieldError()).getDefaultMessage();
+
+        ErrorCode errorCode = ErrorCode.INVALID_KEY;
+        Map<String, Object> attributes = null;
+
+        try {
+            errorCode = ErrorCode.valueOf(enumKey);
+
+            var constrainViolation = e.getBindingResult().getAllErrors().get(0).unwrap(ConstraintViolation.class);
+
+            attributes = constrainViolation.getConstraintDescriptor().getAttributes();
+
+            log.info(attributes.toString());
+        } catch (IllegalArgumentException ignored) {}
+
+        String errorMessage = Objects.isNull(attributes) ? errorCode.getMessage() : mapAttribute(errorCode.getMessage(), attributes);
+
         ApiResponse<Object> response = new ApiResponse<>(null);
         response.setCode(HttpStatus.BAD_REQUEST.value());
-        response.setErrorCode(ErrorCode.VALIDATION_FAILED.getCode());
-        response.setErrorMessage(ErrorCode.VALIDATION_FAILED.getMessage());
-
-        String mess = String.join(", ", e.getBindingResult().getFieldErrors().stream().map(FieldError::getDefaultMessage).toList());
-
-        response.setMessage(mess);
-
-        return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+        response.setErrorCode(errorCode.getCode());
+        response.setErrorMessage(errorMessage);
+        response.setMessage(errorMessage);
+        return ResponseEntity.badRequest().body(response);
     }
 
     @ExceptionHandler(AppException.class)
@@ -47,5 +65,11 @@ public class GlobalExceptionHandler {
 
         return new ResponseEntity<>(new ApiResponse<>().setCode(errorCode.getHttpStatus().value()).setMessage(errorCode.getMessage())
                 , errorCode.getHttpStatus());
+    }
+
+    private String mapAttribute(String mess, Map<String, Object> attributes) {
+        String minValue = attributes.get(MIN_ATTRIBUTE).toString();
+
+        return mess.replace( "{" + MIN_ATTRIBUTE + "}", minValue);
     }
 }
