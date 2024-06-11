@@ -1,6 +1,7 @@
 package com.example.identityservice.configuration;
 
 import com.nimbusds.jose.JWSAlgorithm;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -27,10 +28,11 @@ public class SecurityConfig {
 
     private final String[] PUBLIC_ENDPOINTS = {"/user",
             "/auth/login",
-            "/auth/introspect"};
+            "/auth/introspect",
+            "/auth/logout",};
 
-    @Value("${jwt.signer-key}")
-    private String signerKey;
+    @Autowired
+    CustomJwtDecoder jwtDecoder;
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
@@ -41,21 +43,13 @@ public class SecurityConfig {
                         .authenticated());
 
         http.oauth2ResourceServer(oauth2 ->
-            oauth2.jwt(jwtConfigurer -> jwtConfigurer.decoder(jwtDecoder())
-                    .jwtAuthenticationConverter(jwtAuthenticationConverter()))
-                    .authenticationEntryPoint(new JwtAuthenticationEntrypoint()));
+                oauth2.jwt(jwtConfigurer -> jwtConfigurer.decoder(jwtDecoder)
+                                .jwtAuthenticationConverter(jwtAuthenticationConverter()))
+                        .authenticationEntryPoint(new JwtAuthenticationEntrypoint()));
 
         http.csrf(AbstractHttpConfigurer::disable);
 
         return http.build();
-    }
-
-    @Bean
-    JwtDecoder jwtDecoder() {
-        SecretKeySpec secretKeySpec = new SecretKeySpec(signerKey.getBytes(), JWSAlgorithm.HS512.getName());
-        return NimbusJwtDecoder.withSecretKey(secretKeySpec)
-                .macAlgorithm(MacAlgorithm.HS512)
-                .build();
     }
 
     @Bean

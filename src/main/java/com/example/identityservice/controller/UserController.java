@@ -47,6 +47,6 @@ public class UserController {
     @DeleteMapping("{id}")
     public ApiResponse<String> deleteUser(@PathVariable String id) {
         userService.deleteUser(id);
-        return new ApiResponse<>(HttpStatus.OK.name());
+        return new ApiResponse<>("User has been deleted");
     }
 }

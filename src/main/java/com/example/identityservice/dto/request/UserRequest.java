@@ -20,7 +20,8 @@ import java.util.Date;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class UserRequest {
 
-    @Size(min = 6, message = "USERNAME_INVALID")
+    @Size(min = 6, message = "USERNAME_TOO_SHORT")
+    @Size(max = 12, message = "USERNAME_TOO_LONG")
     String username;
 
     @Size(min = 6, message = "PASSWORD_INVALID")

@@ -2,11 +2,14 @@ package com.example.identityservice.service;
 
 import com.example.identityservice.dto.request.AuthenticationRequest;
 import com.example.identityservice.dto.request.IntrospectRequest;
+import com.example.identityservice.dto.request.LogoutRequest;
 import com.example.identityservice.dto.response.AuthenticationResponse;
 import com.example.identityservice.dto.response.IntrospectResponse;
 import com.example.identityservice.exception.AppException;
 import com.example.identityservice.exception.ErrorCode;
+import com.example.identityservice.model.InvalidatedToken;
 import com.example.identityservice.model.User;
+import com.example.identityservice.repository.InvalidatedTokenRepository;
 import com.example.identityservice.repository.PermissionRepository;
 import com.example.identityservice.repository.UserRepository;
 import com.example.identityservice.repository.UserRolesRepository;
@@ -19,6 +22,7 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.experimental.NonFinal;
+import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -32,16 +36,18 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Date;
 import java.util.StringJoiner;
+import java.util.UUID;
 
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class AuthenticationService {
 
-    private static final Logger log = LoggerFactory.getLogger(AuthenticationService.class);
     UserRepository userRepository;
     UserRolesRepository userRolesRepository;
+    InvalidatedTokenRepository invalidatedTokenRepository;
 
     @NonFinal
     @Value("${jwt.signer-key}")
@@ -59,21 +65,50 @@ public class AuthenticationService {
     }
 
     public IntrospectResponse introspect(IntrospectRequest request) throws JOSEException, ParseException {
-        var token = request.getToken();
+        boolean valid = true;
 
+        try {
+            verifyToken(request.getToken());
+        } catch (AppException e) {
+            valid = false;
+        }
+
+        return new IntrospectResponse(valid);
+    }
+
+    public void logout(LogoutRequest request) throws ParseException, JOSEException {
+        try {
+            var signedJWT = verifyToken(request.getToken());
+
+            invalidatedTokenRepository.save(new InvalidatedToken()
+                    .setId(signedJWT.getJWTClaimsSet().getJWTID())
+                    .setExpiryTime(signedJWT.getJWTClaimsSet().getExpirationTime()));
+        } catch (AppException e) {
+            log.info("Token already expired");
+        }
+    }
+
+    private SignedJWT verifyToken(String token) throws ParseException, JOSEException {
         JWSVerifier verifier = new MACVerifier(SIGNER_KEY.getBytes());
 
         SignedJWT signedJWT = SignedJWT.parse(token);
 
         var verified = signedJWT.verify(verifier);
 
-        return new IntrospectResponse(verified && signedJWT.getJWTClaimsSet().getExpirationTime().after(new Date()));
+        if (!(verified && signedJWT.getJWTClaimsSet().getExpirationTime().after(new Date())))
+            throw new AppException(ErrorCode.UNAUTHENTICATED);
+
+        if (invalidatedTokenRepository.findById(signedJWT.getJWTClaimsSet().getJWTID()).isPresent())
+            throw new AppException(ErrorCode.UNAUTHENTICATED);
+
+        return signedJWT;
     }
 
     private String generateToken(User user) {
         JWSHeader header = new JWSHeader(JWSAlgorithm.HS512);
 
         JWTClaimsSet jwtClaimsSet = new JWTClaimsSet.Builder()
+                .jwtID(UUID.randomUUID().toString())
                 .subject(user.getUsername())
                 .issuer("com.example")
                 .issueTime(new Date())

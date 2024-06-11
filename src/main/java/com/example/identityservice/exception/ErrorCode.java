@@ -17,9 +17,10 @@ public enum ErrorCode {
     ROLE_NOT_FOUND("EIS00007", "Role not found", HttpStatus.NOT_FOUND),
     PERMISSION_NOT_FOUND("EIS00008", "Permission not found", HttpStatus.NOT_FOUND),
     INVALID_KEY("EIS00009", "Uncategorized error", HttpStatus.BAD_REQUEST),
-    USERNAME_INVALID("EIS00010", "Username must be at least {min} characters", HttpStatus.BAD_REQUEST),
-    PASSWORD_INVALID("EIS00011", "Password must be at least {min} characters", HttpStatus.BAD_REQUEST),
-    DOB_INVALID("EIS00012", "Your age must be at least {min}", HttpStatus.BAD_REQUEST),
+    USERNAME_TOO_SHORT("EIS00010", "Username must be at least {min} characters", HttpStatus.BAD_REQUEST),
+    USERNAME_TOO_LONG("EIS00011", "Username must be at most {max} characters", HttpStatus.BAD_REQUEST),
+    PASSWORD_INVALID("EIS00012", "Password must be at least {min} characters", HttpStatus.BAD_REQUEST),
+    DOB_INVALID("EIS00013", "Your age must be at least {min}", HttpStatus.BAD_REQUEST),
     ;
 
     private final String code;

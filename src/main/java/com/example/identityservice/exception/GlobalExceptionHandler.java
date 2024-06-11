@@ -19,6 +19,7 @@ import java.util.Objects;
 public class GlobalExceptionHandler {
 
     private static final String MIN_ATTRIBUTE = "min";
+    private static final String MAX_ATTRIBUTE = "max";
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ApiResponse<Object>> methodArgumentNotValidExceptionHandler(MethodArgumentNotValidException e) {
@@ -69,7 +70,9 @@ public class GlobalExceptionHandler {
 
     private String mapAttribute(String mess, Map<String, Object> attributes) {
         String minValue = attributes.get(MIN_ATTRIBUTE).toString();
+        String maxValue = attributes.get(MAX_ATTRIBUTE).toString();
 
-        return mess.replace( "{" + MIN_ATTRIBUTE + "}", minValue);
+        return mess.replace( "{" + MIN_ATTRIBUTE + "}", minValue)
+                .replace("{" + MAX_ATTRIBUTE + "}", maxValue);
     }
 }
