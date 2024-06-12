@@ -1,5 +1,10 @@
 package com.example.identityservice.service;
 
+import java.util.Set;
+import java.util.stream.Collectors;
+
+import org.springframework.stereotype.Service;
+
 import com.example.identityservice.dto.request.PutPermissionRequest;
 import com.example.identityservice.dto.request.RoleRequest;
 import com.example.identityservice.dto.response.RoleResponse;
@@ -10,13 +15,10 @@ import com.example.identityservice.model.Permission;
 import com.example.identityservice.model.Role;
 import com.example.identityservice.repository.PermissionRepository;
 import com.example.identityservice.repository.RoleRepository;
+
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
-import org.springframework.stereotype.Service;
-
-import java.util.Set;
-import java.util.stream.Collectors;
 
 @Service
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
@@ -46,7 +48,8 @@ public class RoleService {
     public RoleResponse putPermission(String name, PutPermissionRequest putPermissionRequest) {
         Role role = roleRepository.findById(name).orElseThrow(() -> new AppException(ErrorCode.ROLE_NOT_FOUND));
         Set<Permission> permissions = permissionRepository.findByNameIn(putPermissionRequest.getPermissions());
-        if (permissions.size() != putPermissionRequest.getPermissions().size()) throw new AppException(ErrorCode.PERMISSION_NOT_FOUND);
+        if (permissions.size() != putPermissionRequest.getPermissions().size())
+            throw new AppException(ErrorCode.PERMISSION_NOT_FOUND);
         permissions.addAll(role.getPermissions());
         role.setPermissions(permissions);
         return roleMapper.toRoleResponse(roleRepository.save(role));

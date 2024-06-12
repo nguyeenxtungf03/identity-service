@@ -1,17 +1,19 @@
 package com.example.identityservice.controller;
 
+import java.util.Set;
+
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.*;
+
 import com.example.identityservice.dto.request.PutPermissionRequest;
 import com.example.identityservice.dto.request.RoleRequest;
 import com.example.identityservice.dto.response.ApiResponse;
 import com.example.identityservice.dto.response.RoleResponse;
 import com.example.identityservice.service.RoleService;
+
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
-import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.*;
-
-import java.util.Set;
 
 @RestController
 @RequestMapping("/role")
@@ -38,8 +40,8 @@ public class RoleController {
     }
 
     @PostMapping("/{name}/put-permission")
-    public ApiResponse<RoleResponse> putPermission(@PathVariable String name, @RequestBody PutPermissionRequest putPermissionRequest) {
+    public ApiResponse<RoleResponse> putPermission(
+            @PathVariable String name, @RequestBody PutPermissionRequest putPermissionRequest) {
         return new ApiResponse<>(roleService.putPermission(name, putPermissionRequest));
     }
-
 }

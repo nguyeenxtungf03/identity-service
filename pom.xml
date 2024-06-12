@@ -21,6 +21,7 @@
         <org.springframework.boot.version>3.2.5</org.springframework.boot.version>
         <org.springframework.security.version>6.2.4</org.springframework.security.version>
         <org.wso2.orbit.com.nimbusds.version>9.31.wso2v1</org.wso2.orbit.com.nimbusds.version>
+        <spotless.version>2.43.0</spotless.version>
     </properties>
     <dependencies>
         <dependency>
@@ -124,6 +125,36 @@
                         <arg>-Amapstruct.verbose=true</arg>
                     </compilerArgs>
                 </configuration>
+            </plugin>
+            <plugin>
+                <groupId>com.diffplug.spotless</groupId>
+                <artifactId>spotless-maven-plugin</artifactId>
+                <version>${spotless.version}</version>
+                <configuration>
+                    <java>
+                        <removeUnusedImports />
+                        <toggleOffOn/>
+                        <trimTrailingWhitespace/>
+                        <endWithNewline/>
+                        <indent>
+                            <tabs>true</tabs>
+                            <spacesPerTab>4</spacesPerTab>
+                        </indent>
+                        <palantirJavaFormat/>
+                        <importOrder>
+                            <!-- Specify either order or file, but not both -->
+                            <order>java,jakarta,org,com,com.diffplug,</order>
+                        </importOrder>
+                    </java>
+                </configuration>
+                <executions>
+                    <execution>
+                        <phase>compile</phase>
+                        <goals>
+                            <goal>apply</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>

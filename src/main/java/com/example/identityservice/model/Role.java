@@ -1,13 +1,15 @@
 package com.example.identityservice.model;
 
+import java.util.Set;
+
 import jakarta.persistence.*;
+
 import lombok.*;
 import lombok.experimental.Accessors;
 import lombok.experimental.FieldDefaults;
 
-import java.util.Set;
-
-@Getter @Setter
+@Getter
+@Setter
 @AllArgsConstructor
 @NoArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
@@ -24,7 +26,6 @@ public class Role {
     @JoinTable(
             name = "role_permissions",
             joinColumns = @JoinColumn(name = "role_name"),
-            inverseJoinColumns = @JoinColumn(name = "permissions_name")
-    )
+            inverseJoinColumns = @JoinColumn(name = "permissions_name"))
     Set<Permission> permissions;
 }

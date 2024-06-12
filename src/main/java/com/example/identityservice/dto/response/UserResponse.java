@@ -1,11 +1,11 @@
 package com.example.identityservice.dto.response;
 
+import java.util.Date;
+import java.util.Set;
+
 import lombok.*;
 import lombok.experimental.Accessors;
 import lombok.experimental.FieldDefaults;
-
-import java.util.Date;
-import java.util.Set;
 
 @AllArgsConstructor
 @NoArgsConstructor

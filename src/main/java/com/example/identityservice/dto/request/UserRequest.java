@@ -1,16 +1,16 @@
 package com.example.identityservice.dto.request;
 
-import com.example.identityservice.validator.DobConstraint;
-import com.fasterxml.jackson.annotation.JsonFormat;
-import jakarta.validation.constraints.Max;
-import jakarta.validation.constraints.Min;
+import java.util.Date;
+
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
+
+import com.example.identityservice.validator.DobConstraint;
+import com.fasterxml.jackson.annotation.JsonFormat;
+
 import lombok.*;
 import lombok.experimental.Accessors;
 import lombok.experimental.FieldDefaults;
-
-import java.util.Date;
 
 @AllArgsConstructor
 @NoArgsConstructor

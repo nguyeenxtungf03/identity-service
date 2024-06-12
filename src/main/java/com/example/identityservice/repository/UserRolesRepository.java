@@ -1,12 +1,13 @@
 package com.example.identityservice.repository;
 
-import com.example.identityservice.model.User;
-import com.example.identityservice.model.UserRoles;
+import java.util.List;
+import java.util.Set;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
-import java.util.List;
-import java.util.Set;
+import com.example.identityservice.model.User;
+import com.example.identityservice.model.UserRoles;
 
 @Repository
 public interface UserRolesRepository extends JpaRepository<UserRoles, String> {

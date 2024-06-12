@@ -1,6 +1,7 @@
 package com.example.identityservice.model;
 
 import jakarta.persistence.*;
+
 import lombok.*;
 import lombok.experimental.Accessors;
 import lombok.experimental.FieldDefaults;
@@ -16,9 +17,11 @@ public class UserRoles {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     String id;
+
     @ManyToOne
     @JoinColumn(name = "user_id")
     User user;
+
     @ManyToOne
     @JoinColumn(name = "role_name")
     Role role;

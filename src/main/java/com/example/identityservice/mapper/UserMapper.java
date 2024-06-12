@@ -1,16 +1,16 @@
 package com.example.identityservice.mapper;
 
-import com.example.identityservice.dto.request.UserRequest;
-import com.example.identityservice.dto.request.UserUpdateRequest;
-import com.example.identityservice.dto.response.UserResponse;
-import com.example.identityservice.model.User;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
 import org.mapstruct.Named;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+
+import com.example.identityservice.dto.request.UserRequest;
+import com.example.identityservice.dto.request.UserUpdateRequest;
+import com.example.identityservice.dto.response.UserResponse;
+import com.example.identityservice.model.User;
 
 @Mapper
 public interface UserMapper {

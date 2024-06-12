@@ -1,19 +1,20 @@
 package com.example.identityservice.controller;
 
+import java.util.List;
+
+import jakarta.validation.Valid;
+
+import org.springframework.web.bind.annotation.*;
+
 import com.example.identityservice.dto.request.UserRequest;
 import com.example.identityservice.dto.request.UserUpdateRequest;
 import com.example.identityservice.dto.response.ApiResponse;
 import com.example.identityservice.dto.response.UserResponse;
 import com.example.identityservice.service.UserService;
-import jakarta.validation.Valid;
+
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
-import org.springframework.http.HttpStatus;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/user")
@@ -39,8 +40,8 @@ public class UserController {
     }
 
     @PutMapping("{id}")
-    public ApiResponse<UserResponse> updateUser(@PathVariable String id,
-                                                @RequestBody @Valid UserUpdateRequest request) {
+    public ApiResponse<UserResponse> updateUser(
+            @PathVariable String id, @RequestBody @Valid UserUpdateRequest request) {
         return new ApiResponse<>(userService.updateUser(id, request));
     }
 

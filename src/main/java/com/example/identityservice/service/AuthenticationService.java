@@ -1,5 +1,17 @@
 package com.example.identityservice.service;
 
+import java.text.ParseException;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+import java.util.Date;
+import java.util.StringJoiner;
+import java.util.UUID;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+
 import com.example.identityservice.dto.request.AuthenticationRequest;
 import com.example.identityservice.dto.request.IntrospectRequest;
 import com.example.identityservice.dto.request.LogoutRequest;
@@ -11,7 +23,6 @@ import com.example.identityservice.exception.ErrorCode;
 import com.example.identityservice.model.InvalidatedToken;
 import com.example.identityservice.model.User;
 import com.example.identityservice.repository.InvalidatedTokenRepository;
-import com.example.identityservice.repository.PermissionRepository;
 import com.example.identityservice.repository.UserRepository;
 import com.example.identityservice.repository.UserRolesRepository;
 import com.nimbusds.jose.*;
@@ -19,26 +30,12 @@ import com.nimbusds.jose.crypto.MACSigner;
 import com.nimbusds.jose.crypto.MACVerifier;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
+
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.experimental.NonFinal;
 import lombok.extern.slf4j.Slf4j;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.stereotype.Service;
-import org.springframework.util.CollectionUtils;
-
-import java.text.ParseException;
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
-import java.util.Date;
-import java.util.StringJoiner;
-import java.util.UUID;
-
 
 @Slf4j
 @Service
@@ -63,7 +60,8 @@ public class AuthenticationService {
     protected Long REFRESHABLE_DURATION;
 
     public AuthenticationResponse authenticate(AuthenticationRequest request) {
-        User user = userRepository.findByUsername(request.getUsername())
+        User user = userRepository
+                .findByUsername(request.getUsername())
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
 
         PasswordEncoder encoder = new BCryptPasswordEncoder();
@@ -104,9 +102,9 @@ public class AuthenticationService {
         Date expirationTime = signedJWT.getJWTClaimsSet().getExpirationTime();
         invalidatedTokenRepository.save(new InvalidatedToken(jwtId, expirationTime));
 
-        User user = userRepository.findByUsername(signedJWT.getJWTClaimsSet().getSubject()).orElseThrow(
-                () -> new AppException(ErrorCode.UNAUTHENTICATED)
-        );
+        User user = userRepository
+                .findByUsername(signedJWT.getJWTClaimsSet().getSubject())
+                .orElseThrow(() -> new AppException(ErrorCode.UNAUTHENTICATED));
 
         return new AuthenticationResponse(generateToken(user));
     }
@@ -123,11 +121,16 @@ public class AuthenticationService {
         if (!isRefresh && jwtClaims.getExpirationTime().before(new Date()))
             throw new AppException(ErrorCode.UNAUTHENTICATED);
 
-        if (isRefresh && jwtClaims.getIssueTime().toInstant().plus(REFRESHABLE_DURATION, ChronoUnit.SECONDS).isBefore(Instant.now()))
-            throw new AppException(ErrorCode.UNAUTHENTICATED);
+        if (isRefresh
+                && jwtClaims
+                        .getIssueTime()
+                        .toInstant()
+                        .plus(REFRESHABLE_DURATION, ChronoUnit.SECONDS)
+                        .isBefore(Instant.now())) throw new AppException(ErrorCode.UNAUTHENTICATED);
 
-        if (invalidatedTokenRepository.findById(signedJWT.getJWTClaimsSet().getJWTID()).isPresent())
-            throw new AppException(ErrorCode.UNAUTHENTICATED);
+        if (invalidatedTokenRepository
+                .findById(signedJWT.getJWTClaimsSet().getJWTID())
+                .isPresent()) throw new AppException(ErrorCode.UNAUTHENTICATED);
 
         return signedJWT;
     }
@@ -140,7 +143,8 @@ public class AuthenticationService {
                 .subject(user.getUsername())
                 .issuer("com.example")
                 .issueTime(new Date())
-                .expirationTime(new Date(Instant.now().plus(VALID_DURATION, ChronoUnit.SECONDS).toEpochMilli()))
+                .expirationTime(new Date(
+                        Instant.now().plus(VALID_DURATION, ChronoUnit.SECONDS).toEpochMilli()))
                 .claim("customClaim1", "customClaimValue1")
                 .claim("scope", buildScope(user))
                 .build();

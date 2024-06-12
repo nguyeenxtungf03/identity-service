@@ -1,5 +1,9 @@
 package com.example.identityservice.controller;
 
+import java.text.ParseException;
+
+import org.springframework.web.bind.annotation.*;
+
 import com.example.identityservice.dto.request.AuthenticationRequest;
 import com.example.identityservice.dto.request.IntrospectRequest;
 import com.example.identityservice.dto.request.LogoutRequest;
@@ -9,12 +13,10 @@ import com.example.identityservice.dto.response.AuthenticationResponse;
 import com.example.identityservice.dto.response.IntrospectResponse;
 import com.example.identityservice.service.AuthenticationService;
 import com.nimbusds.jose.JOSEException;
+
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
-import org.springframework.web.bind.annotation.*;
-
-import java.text.ParseException;
 
 @RestController
 @RequestMapping("/auth")
@@ -30,7 +32,8 @@ public class AuthenticationController {
     }
 
     @PostMapping("/introspect")
-    public ApiResponse<IntrospectResponse> introspect(@RequestBody IntrospectRequest request) throws ParseException, JOSEException {
+    public ApiResponse<IntrospectResponse> introspect(@RequestBody IntrospectRequest request)
+            throws ParseException, JOSEException {
         return new ApiResponse<>(authenticationService.introspect(request));
     }
 
