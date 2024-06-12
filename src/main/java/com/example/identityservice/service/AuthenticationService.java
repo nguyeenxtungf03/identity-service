@@ -3,6 +3,7 @@ package com.example.identityservice.service;
 import com.example.identityservice.dto.request.AuthenticationRequest;
 import com.example.identityservice.dto.request.IntrospectRequest;
 import com.example.identityservice.dto.request.LogoutRequest;
+import com.example.identityservice.dto.request.RefreshTokenRequest;
 import com.example.identityservice.dto.response.AuthenticationResponse;
 import com.example.identityservice.dto.response.IntrospectResponse;
 import com.example.identityservice.exception.AppException;
@@ -53,6 +54,14 @@ public class AuthenticationService {
     @Value("${jwt.signer-key}")
     protected String SIGNER_KEY;
 
+    @NonFinal
+    @Value("${jwt.valid-duration}")
+    protected Long VALID_DURATION;
+
+    @NonFinal
+    @Value("${jwt.refreshable-duration}")
+    protected Long REFRESHABLE_DURATION;
+
     public AuthenticationResponse authenticate(AuthenticationRequest request) {
         User user = userRepository.findByUsername(request.getUsername())
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
@@ -68,7 +77,7 @@ public class AuthenticationService {
         boolean valid = true;
 
         try {
-            verifyToken(request.getToken());
+            verifyToken(request.getToken(), false);
         } catch (AppException e) {
             valid = false;
         }
@@ -78,7 +87,7 @@ public class AuthenticationService {
 
     public void logout(LogoutRequest request) throws ParseException, JOSEException {
         try {
-            var signedJWT = verifyToken(request.getToken());
+            var signedJWT = verifyToken(request.getToken(), true);
 
             invalidatedTokenRepository.save(new InvalidatedToken()
                     .setId(signedJWT.getJWTClaimsSet().getJWTID())
@@ -88,14 +97,33 @@ public class AuthenticationService {
         }
     }
 
-    private SignedJWT verifyToken(String token) throws ParseException, JOSEException {
+    public AuthenticationResponse refreshToken(RefreshTokenRequest request) throws ParseException, JOSEException {
+        var signedJWT = verifyToken(request.getToken(), true);
+
+        String jwtId = signedJWT.getJWTClaimsSet().getJWTID();
+        Date expirationTime = signedJWT.getJWTClaimsSet().getExpirationTime();
+        invalidatedTokenRepository.save(new InvalidatedToken(jwtId, expirationTime));
+
+        User user = userRepository.findByUsername(signedJWT.getJWTClaimsSet().getSubject()).orElseThrow(
+                () -> new AppException(ErrorCode.UNAUTHENTICATED)
+        );
+
+        return new AuthenticationResponse(generateToken(user));
+    }
+
+    private SignedJWT verifyToken(String token, boolean isRefresh) throws ParseException, JOSEException {
         JWSVerifier verifier = new MACVerifier(SIGNER_KEY.getBytes());
 
         SignedJWT signedJWT = SignedJWT.parse(token);
 
-        var verified = signedJWT.verify(verifier);
+        if (!signedJWT.verify(verifier)) throw new AppException(ErrorCode.UNAUTHENTICATED);
 
-        if (!(verified && signedJWT.getJWTClaimsSet().getExpirationTime().after(new Date())))
+        var jwtClaims = signedJWT.getJWTClaimsSet();
+
+        if (!isRefresh && jwtClaims.getExpirationTime().before(new Date()))
+            throw new AppException(ErrorCode.UNAUTHENTICATED);
+
+        if (isRefresh && jwtClaims.getIssueTime().toInstant().plus(REFRESHABLE_DURATION, ChronoUnit.SECONDS).isBefore(Instant.now()))
             throw new AppException(ErrorCode.UNAUTHENTICATED);
 
         if (invalidatedTokenRepository.findById(signedJWT.getJWTClaimsSet().getJWTID()).isPresent())
@@ -112,7 +140,7 @@ public class AuthenticationService {
                 .subject(user.getUsername())
                 .issuer("com.example")
                 .issueTime(new Date())
-                .expirationTime(new Date(Instant.now().plus(24, ChronoUnit.HOURS).toEpochMilli()))
+                .expirationTime(new Date(Instant.now().plus(VALID_DURATION, ChronoUnit.SECONDS).toEpochMilli()))
                 .claim("customClaim1", "customClaimValue1")
                 .claim("scope", buildScope(user))
                 .build();

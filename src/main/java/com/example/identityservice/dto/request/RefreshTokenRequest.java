@@ -10,7 +10,6 @@ import lombok.experimental.FieldDefaults;
 @Setter
 @Accessors(chain = true)
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class AuthenticationRequest {
-    String username;
-    String password;
+public class RefreshTokenRequest {
+    String token;
 }

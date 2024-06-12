@@ -29,7 +29,9 @@ public class SecurityConfig {
     private final String[] PUBLIC_ENDPOINTS = {"/user",
             "/auth/login",
             "/auth/introspect",
-            "/auth/logout",};
+            "/auth/logout",
+            "/auth/refresh-token",
+    };
 
     @Autowired
     CustomJwtDecoder jwtDecoder;
