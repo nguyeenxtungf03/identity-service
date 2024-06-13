@@ -79,6 +79,11 @@
             <artifactId>spring-boot-starter-oauth2-resource-server</artifactId>
             <version>${org.springframework.boot.version}</version>
         </dependency>
+        <dependency>
+            <groupId>com.mysql</groupId>
+            <artifactId>mysql-connector-j</artifactId>
+            <scope>runtime</scope>
+        </dependency>
     </dependencies>
 
     <build>
