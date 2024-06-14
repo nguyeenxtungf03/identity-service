@@ -21,6 +21,7 @@ public enum ErrorCode {
     USERNAME_TOO_LONG("EIS00011", "Username must be at most {max} characters", HttpStatus.BAD_REQUEST),
     PASSWORD_INVALID("EIS00012", "Password must be at least {min} characters", HttpStatus.BAD_REQUEST),
     DOB_INVALID("EIS00013", "Your age must be at least {min}", HttpStatus.BAD_REQUEST),
+    USER_ALREADY_EXISTS("EIS00014", "User already exists", HttpStatus.CONFLICT),
     ;
 
     private final String code;

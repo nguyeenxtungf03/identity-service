@@ -1,10 +1,13 @@
 package com.example.identityservice.service;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import com.example.identityservice.model.Role;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.access.prepost.PostAuthorize;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
@@ -26,6 +29,7 @@ import com.example.identityservice.repository.UserRolesRepository;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.springframework.util.CollectionUtils;
 
 @Service
 @RequiredArgsConstructor
@@ -61,19 +65,24 @@ public class UserService {
         return userMapper
                 .toUserResponse(user)
                 .setRoleResponses(userRoles.stream()
-                        .filter(ur -> ur.getUser().equals(user))
                         .map(r -> roleMapper.toRoleResponse(r.getRole()))
                         .collect(Collectors.toSet()));
     }
 
     public UserResponse createUser(UserRequest userRequest) {
-        var user = userRepository.findByUsername(userRequest.getUsername());
-        if (user.isPresent()) throw new AppException(ErrorCode.USERNAME_ALREADY_EXISTS);
-        User newUser = userRepository.save(userMapper.toUser(userRequest));
+        User newUser = userMapper.toUser(userRequest);
+        try {
+            newUser = userRepository.save(newUser);
+        } catch (Exception e) {
+            throw new AppException(ErrorCode.USER_ALREADY_EXISTS);
+        }
+        Role roleUser = roleRepository.findById("USER").orElseThrow();
         userRolesRepository.save(new UserRoles()
                 .setUser(newUser)
-                .setRole(roleRepository.findById("USER").orElseThrow()));
-        return userMapper.toUserResponse(newUser);
+                .setRole(roleUser));
+        return userMapper
+                .toUserResponse(newUser)
+                .setRoleResponses(Set.of(roleMapper.toRoleResponse(roleUser)));
     }
 
     public UserResponse updateUser(String id, UserUpdateRequest request) {
